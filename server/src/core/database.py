@@ -1,4 +1,3 @@
-# backend/database.py
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -11,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import text
 
-from src.core.config import settings  # DATABASE_URL etc. pulled from environment
+from src.core.config import settings
 
 logger = logging.getLogger("database")
 

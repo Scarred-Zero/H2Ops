@@ -1,5 +1,4 @@
 import _uuid
-import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
@@ -10,7 +9,7 @@ from sqlalchemy import (
     Enum as SAEnum,
     DateTime,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
@@ -34,5 +33,8 @@ class Device(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+    # New JSONB column for dynamic thresholds
+    thresholds: Mapped[dict] = mapped_column(JSONB, nullable=True, default=dict)
 
     facility: Mapped["Facility"] = relationship(back_populates="devices")

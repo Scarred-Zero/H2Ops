@@ -47,10 +47,9 @@ H2Ops/
 │   └── src/
 │       ├── __init__.py
 │       ├── api/
-│       │   ├── __init__.py
-│       │   ├── deps.py
 │       │   └── v1/
 │       │       └── routes/
+│       │           ├── __init__.py
 │       │           ├── auth.py
 │       │           └── ws.py
 │       ├── aws/
@@ -67,6 +66,9 @@ H2Ops/
 │       │   ├── exceptions.py
 │       │   ├── metrics.py
 │       │   └── security.py
+│       ├── dependencies/
+│       │   ├── __init__.py
+│       │   └── auth.py
 │       ├── models/
 │       │   ├── __init__.py
 │       │   ├── device.py
@@ -78,12 +80,19 @@ H2Ops/
 │       │   ├── __init__.py
 │       │   └── telemetry_repo.py
 │       ├── schemas/
+│       │   ├── __init__.py
+│       │   ├── device.py
+│       │   ├── facility.py
+│       │   ├── telemetry_log.py
+│       │   └── user.py
 │       ├── services/
+│       │   ├── __init__.py
 │       │   ├── telemetry_service.py
 │       │   └── websocket_manager.py
 │       ├── test/
 │       ├── utils/
 │       │   ├── __init__.py
+│       │   ├── jwt_handler.py
 │       │   └── path_utils.py
 │       └── workers/
 │           ├── __init__.py

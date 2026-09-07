@@ -89,7 +89,7 @@ class Settings(BaseSettings):
     # JWT SETTINGS
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret-key-change-me")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 20)
+    JWT_ACCESS_TOKEN_MINUTES: int = os.getenv("JWT_ACCESS_TOKEN_MINUTES", 20)
     REFRESH_TOKEN_EXPIRE_DAYS: int = os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7)
     COOKIE_DOMAIN: str = os.getenv("COOKIE_DOMAIN", "localhost")
     COOKIE_SECURE: bool = os.getenv("COOKIE_SECURE", False)

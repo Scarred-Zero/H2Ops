@@ -1,86 +1,107 @@
-from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+import logging
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.user import MetricType
+from src.core.database import async_session
+from src.models.device import Device
 from src.repositories.telemetry_repo import TelemetryRepository
-from src.services.websocket_manager import connection_manager
+from src.core.redis_client import redis_client  # optional; adapt if not present
+
+logger = logging.getLogger("h2ops.telemetry")
 
 
-class TelemetryService:
+async def _get_device_thresholds(device_id: str) -> Dict[str, Any]:
     """
-    Business logic layer sitting between API routes / MQTT subscriber and
-    the repository. Owns threshold evaluation, unit handling, and the
-    decision to push data over the live WebSocket channel.
+    Fetch thresholds for a device. Try Redis cache first, fallback to DB.
     """
+    cache_key = f"device:{device_id}:thresholds"
+    try:
+        if redis_client:
+            cached = await redis_client.get(cache_key)
+            if cached:
+                # redis returns bytes; decode and parse JSON
+                import json
 
-    ALERT_THRESHOLDS = {
-        MetricType.PH: (6.5, 8.5),  # (low, high) safe band
-        MetricType.TURBIDITY_NTU: (0.0, 5.0),
-    }
-
-    def __init__(self, session: AsyncSession) -> None:
-        self.repo = TelemetryRepository(session)
-
-    def _classify(self, metric_type: MetricType, value: float) -> str:
-        bounds = self.ALERT_THRESHOLDS.get(metric_type)
-        if not bounds:
-            return "normal"
-        low, high = bounds
-        if value < low or value > high:
-            return "alert"
-        margin = (high - low) * 0.1
-        if value < low + margin or value > high - margin:
-            return "drift"
-        return "normal"
-
-    async def ingest_reading(
-        self,
-        facility_id: str,
-        device_id: str,
-        metric_type: MetricType,
-        value: float,
-        ts: datetime,
-    ) -> None:
-        """Called by the MQTT subscriber for every incoming telemetry point."""
-        await self.repo.insert_reading(device_id, metric_type, value, ts)
-
-        status = self._classify(metric_type, value)
-
-        await connection_manager.broadcast_to_facility(
-            facility_id,
-            {
-                "type": "telemetry",
-                "device_id": device_id,
-                "metric_type": metric_type.value,
-                "value": value,
-                "status": status,
-                "timestamp": ts.isoformat(),
-            },
+                return json.loads(cached)
+    except Exception:
+        logger.debug(
+            "Redis unavailable or error reading thresholds cache", exc_info=True
         )
 
-        if status == "alert":
-            await connection_manager.broadcast_to_facility(
-                facility_id,
-                {
-                    "type": "alert",
-                    "device_id": device_id,
-                    "metric_type": metric_type.value,
-                    "value": value,
-                    "timestamp": ts.isoformat(),
-                },
+    async with async_session() as session:  # type: AsyncSession
+        q = select(Device.thresholds).where(Device.id == device_id)
+        result = await session.execute(q)
+        thresholds = result.scalar_one_or_none() or {}
+        # prime cache
+        try:
+            if redis_client:
+                import json
+
+                await redis_client.set(cache_key, json.dumps(thresholds), ex=300)
+        except Exception:
+            logger.debug("Failed to set thresholds cache", exc_info=True)
+        return thresholds
+
+
+async def evaluate_telemetry(
+    device_id: str, payload: Dict[str, Any]
+) -> Optional[Dict[str, Any]]:
+    """
+    Evaluate telemetry payload against device thresholds.
+    Returns an alert dict if any threshold is violated, otherwise None.
+    payload example: {"ph": 8.2, "turbidity": 3.4, "orp": 250}
+    """
+    thresholds = await _get_device_thresholds(device_id)
+
+    alerts = []
+
+    ph = payload.get("ph")
+    if ph is not None:
+        ph_min = thresholds.get("ph_min")
+        ph_max = thresholds.get("ph_max")
+        if ph_min is not None and ph < ph_min:
+            alerts.append(
+                {"metric": "ph", "value": ph, "threshold": ph_min, "type": "below"}
+            )
+        if ph_max is not None and ph > ph_max:
+            alerts.append(
+                {"metric": "ph", "value": ph, "threshold": ph_max, "type": "above"}
             )
 
-    async def get_chart_series(
-        self,
-        device_id: str,
-        metric_type: MetricType,
-        hours: int = 24,
-        bucket_interval: str = "5 minutes",
-    ) -> list[dict]:
-        """Used by the analytics/dashboard REST endpoints for chart data."""
-        end = datetime.utcnow()
-        start = end - timedelta(hours=hours)
-        return await self.repo.get_bucketed_averages(
-            device_id, metric_type, start, end, bucket_interval
-        )
+    turbidity = payload.get("turbidity")
+    if turbidity is not None:
+        turbidity_max = thresholds.get("turbidity_max_ntu")
+        if turbidity_max is not None and turbidity > turbidity_max:
+            alerts.append(
+                {
+                    "metric": "turbidity",
+                    "value": turbidity,
+                    "threshold": turbidity_max,
+                    "type": "above",
+                }
+            )
+
+    orp = payload.get("orp")
+    if orp is not None:
+        orp_min = thresholds.get("orp_min_mv")
+        if orp_min is not None and orp < orp_min:
+            alerts.append(
+                {"metric": "orp", "value": orp, "threshold": orp_min, "type": "below"}
+            )
+
+    if alerts:
+        alert_payload = {
+            "device_id": device_id,
+            "timestamp": payload.get("timestamp"),
+            "alerts": alerts,
+        }
+        # persist alert via repository or push to alerting queue
+        try:
+            await TelemetryRepository.create_alert(alert_payload)
+        except Exception:
+            logger.exception("Failed to persist alert")
+        return alert_payload
+
+    return None

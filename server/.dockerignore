@@ -1,0 +1,27 @@
+# Node dependencies and build caches
+**/node_modules
+**/.next
+**/dist
+**/build
+
+# Python dependencies and environments
+**/.venv
+**/venv
+**/env
+**/.uv
+**/.pytest_cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Local environment variables and secrets
+**.env*
+! .env.development.local
+
+# Git and OS metadata
+.git
+.gitignore
+.dockerignore
+**/.DS_Store
+Thumbs.db

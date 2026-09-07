@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s     # How often to fetch metrics from your app (default is 1m)
+  evaluation_interval: 15s # How often to evaluate alerting rules
+
+scrape_configs:
+  # 1. Give your monitoring job a clear name
+  - job_name: "H2Ops-backend"
+    
+    # 2. Define the path where metrics live (matches your setup_metrics configuration)
+    metrics_path: "/metrics"
+    
+    # 3. Provide the credentials you set up in your get_current_username function
+    basic_auth:
+      username: "h2ops_dev_metrics" # In production, use file-based secrets if preferred
+      password: "" # In production, use file-based secrets if preferred
+
+    # 4. Point Prometheus to your server's address
+    static_configs:
+      - targets: ["backend:8000"] 
+        # Note: Use "localhost:8000" if running Prometheus natively on your machine,
+        # or use your production domain like "://yourdomain.com" with 'scheme: https'

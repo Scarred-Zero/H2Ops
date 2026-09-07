@@ -1,0 +1,54 @@
+# System Files
+.DS_Store
+Thumbs.db
+
+# Node.js (Next.js)
+client/node_modules/
+client/.next/
+client/out/
+client/build/
+
+# Python (FastAPI)
+server/__pycache__/
+server/*.pyc
+server/*.pyo
+server/*.pyd
+server/.pytest_cache/
+server/.venv/
+server/env/
+server/venv/
+
+server/src/__pycache__/
+server/src/*.pyc
+server/src/*.pyo
+server/src/*.pyd
+server/src/.pytest_cache/
+server/src/env/
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Environments and Secrets
+.env
+.env.local
+.env.dev.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs and Tools
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+
+stuff.txt

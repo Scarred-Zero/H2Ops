@@ -1,4 +1,6 @@
-from typing import Optional, Dict
+from __future__ import annotations
+
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -9,7 +11,6 @@ class DeviceThresholds(BaseModel):
         None, description="Maximum turbidity in NTU"
     )
     orp_min_mv: Optional[float] = Field(None, description="Minimum ORP in mV")
-    # add other sensor thresholds as needed
 
 
 class DeviceCreate(BaseModel):
@@ -17,6 +18,13 @@ class DeviceCreate(BaseModel):
     name: str
     device_type: str
     ph_setpoint: Optional[float] = 7.0
+    thresholds: Optional[DeviceThresholds] = None
+
+
+class DeviceUpdate(BaseModel):
+    name: Optional[str] = None
+    ph_setpoint: Optional[float] = None
+    is_online: Optional[bool] = None
     thresholds: Optional[DeviceThresholds] = None
 
 

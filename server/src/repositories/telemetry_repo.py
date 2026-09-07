@@ -1,82 +1,71 @@
-from datetime import datetime
+# server/src/repositories/telemetry_repo.py
+from __future__ import annotations
 
-from sqlalchemy import select, text
+from typing import Any, Dict, Optional
+import json
+import logging
+
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.user import MetricType
-from src.models.telemetry_log import TelemetryLog
+from src.core.database import async_session
+from src.models.alert import Alert
+from src.utils.redis_client import get_redis
+
+logger = logging.getLogger("h2ops.telemetry_repo")
 
 
 class TelemetryRepository:
-    """Data-access layer — no business logic, only persistence/query concerns."""
+    @staticmethod
+    async def create_alert(alert_payload: Dict[str, Any]) -> Alert:
+        """
+        Persist an alert into the alerts table and optionally publish to Redis channel.
+        Returns the created Alert ORM instance.
+        """
+        async with async_session() as session:  # type: AsyncSession
+            async with session.begin():
+                stmt = (
+                    insert(Alert)
+                    .values(
+                        device_id=alert_payload["device_id"],
+                        payload=alert_payload,
+                    )
+                    .returning(Alert)
+                )
+                result = await session.execute(stmt)
+                created_row = result.scalar_one()
+                # SQLAlchemy returns a mapped instance when returning the model
+                # but depending on DB driver you might get a Row; ensure we have an ORM object
+                # If scalar_one() returns a Row, fetch by id:
+                if not isinstance(created_row, Alert):
+                    # fallback: query by id
+                    alert_id = created_row.id  # type: ignore[attr-defined]
+                    q = select(Alert).where(Alert.id == alert_id)
+                    res = await session.execute(q)
+                    created_row = res.scalar_one()
 
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
+            # publish to redis channel for real-time consumers (optional)
+            try:
+                redis = get_redis()
+                if redis:
+                    channel = "alerts"
+                    await redis.publish(channel, json.dumps(alert_payload))
+            except Exception:
+                logger.exception("Failed to publish alert to redis")
 
-    async def insert_reading(
-        self, device_id: str, metric_type: MetricType, value: float, ts: datetime
-    ) -> TelemetryLog:
-        row = TelemetryLog(
-            device_id=device_id,
-            metric_type=metric_type,
-            metric_value=value,
-            timestamp=ts,
-        )
-        self.session.add(row)
-        await self.session.commit()
-        return row
+            return created_row
 
-    async def get_recent_readings(
-        self, device_id: str, metric_type: MetricType, limit: int = 200
-    ) -> list[TelemetryLog]:
-        stmt = (
-            select(TelemetryLog)
-            .where(
-                TelemetryLog.device_id == device_id,
-                TelemetryLog.metric_type == metric_type,
+    @staticmethod
+    async def list_alerts_for_device(
+        device_id: str, limit: int = 100
+    ) -> list[Dict[str, Any]]:
+        async with async_session() as session:
+            q = (
+                select(Alert)
+                .where(Alert.device_id == device_id)
+                .order_by(Alert.created_at.desc())
+                .limit(limit)
             )
-            .order_by(TelemetryLog.timestamp.desc())
-            .limit(limit)
-        )
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
-
-    async def get_bucketed_averages(
-        self,
-        device_id: str,
-        metric_type: MetricType,
-        start: datetime,
-        end: datetime,
-        bucket_interval: str = "5 minutes",
-    ) -> list[dict]:
-        """
-        Uses TimescaleDB's `time_bucket` for efficient server-side
-        downsampling — this is the workhorse query for dashboard charts and
-        compliance-report aggregation, avoiding pulling raw high-frequency
-        rows to the application layer.
-        """
-        query = text("""
-            SELECT
-                time_bucket(:bucket_interval, timestamp) AS bucket,
-                avg(metric_value) AS avg_value,
-                min(metric_value) AS min_value,
-                max(metric_value) AS max_value,
-                count(*) AS sample_count
-            FROM telemetry_logs
-            WHERE device_id = :device_id
-              AND metric_type = :metric_type
-              AND timestamp BETWEEN :start AND :end
-            GROUP BY bucket
-            ORDER BY bucket ASC;
-            """)
-        result = await self.session.execute(
-            query,
-            {
-                "bucket_interval": bucket_interval,
-                "device_id": device_id,
-                "metric_type": metric_type.value,
-                "start": start,
-                "end": end,
-            },
-        )
-        return [dict(row._mapping) for row in result]
+            result = await session.execute(q)
+            rows = result.scalars().all()
+            return [r.payload for r in rows]

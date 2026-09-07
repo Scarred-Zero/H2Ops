@@ -11,6 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
+from server.src.utils.redis_client import init_redis, close_redis
 from src.core.config import settings
 from src.utils import mqtt_subscriber
 from src.workers import simulator
@@ -44,6 +45,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     sim_task = asyncio.create_task(simulator.run_simulator_loop())
     logger.info(f"Starting MQTT subscriber and simulator background tasks in {settings.ENVIRONMENT}  mode")
 
+    # INITIALISE REDIS
+    init_redis() 
+    # INITIALISE DATABASE
+    await init_db()
+
     # INITAIALISE SENTRY IF DSN IS PROVIDED
     if settings.SENTRY_DSN:
         sentry_sdk.init(
@@ -59,13 +65,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     else:
         logger.info("Sentry DSN not provided. Sentry is disabled.")
 
-    # INITIALISE DATABASE
-    await init_db()
-
     logger.info("Application startup complete")
     try:
         yield
     finally:
+        await close_redis()
         # Cancel tasks and wait for them to finish
         for task, name in ((mqtt_task, "mqtt_subscriber"), (sim_task, "simulator")):
             if not task.done():
@@ -149,6 +153,4 @@ def create_app() -> FastAPI:
     return app
 
 
-
 app = create_app()
-

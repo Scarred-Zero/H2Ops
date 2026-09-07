@@ -51,6 +51,7 @@ H2Ops/
 │       │       └── routes/
 │       │           ├── __init__.py
 │       │           ├── auth.py
+│       │           ├── device.py
 │       │           └── ws.py
 │       ├── aws/
 │       │   ├── client.py
@@ -71,6 +72,7 @@ H2Ops/
 │       │   └── auth.py
 │       ├── models/
 │       │   ├── __init__.py
+│       │   ├── alert.py
 │       │   ├── device.py
 │       │   ├── facility.py
 │       │   ├── role.py
@@ -81,6 +83,7 @@ H2Ops/
 │       │   └── telemetry_repo.py
 │       ├── schemas/
 │       │   ├── __init__.py
+│       │   ├── auth.py
 │       │   ├── device.py
 │       │   ├── facility.py
 │       │   ├── telemetry_log.py
@@ -90,10 +93,13 @@ H2Ops/
 │       │   ├── telemetry_service.py
 │       │   └── websocket_manager.py
 │       ├── test/
+│       │   ├── test_device_router.py
+│       │   └── test_telemetry_repo.py
 │       ├── utils/
 │       │   ├── __init__.py
 │       │   ├── jwt_handler.py
-│       │   └── path_utils.py
+│       │   ├── path_utils.py
+│       │   └── redis_client.py
 │       └── workers/
 │           ├── __init__.py
 │           └── simulator.py

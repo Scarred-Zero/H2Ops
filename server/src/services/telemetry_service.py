@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import async_session
 from src.models.device import Device
 from src.repositories.telemetry_repo import TelemetryRepository
-from src.core.redis_client import redis_client  # optional; adapt if not present
+from src.utils.redis_client import redis_client  # optional; adapt if not present
 
 logger = logging.getLogger("h2ops.telemetry")
 

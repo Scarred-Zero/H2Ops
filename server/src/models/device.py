@@ -1,5 +1,6 @@
 import _uuid
 from datetime import datetime, timezone
+from typing import List
 
 from sqlalchemy import (
     String,
@@ -12,6 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.models.alert import Alert
 from src.core.database import Base
 from src.models.user import DeviceType
 from src.models.facility import Facility
@@ -32,7 +34,9 @@ class Device(Base):
     is_online: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    ) 
+    alerts: Mapped[List["Alert"]] = relationship("Alert", back_populates="device", cascade="all, delete-orphan")
+
 
     # New JSONB column for dynamic thresholds
     thresholds: Mapped[dict] = mapped_column(JSONB, nullable=True, default=dict)

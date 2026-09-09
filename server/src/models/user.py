@@ -1,15 +1,11 @@
-import enum
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    String,
-    Float,
     Boolean,
+    String,
     ForeignKey,
-    Enum as SAEnum,
     DateTime,
-    Index,
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
@@ -17,30 +13,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
 from src.models.facility import Facility
+from src.models.role import Role
 
 
 def _uuid() -> str:
     return str(uuid.uuid4())
-
-
-class UserRole(str, enum.Enum):
-    PLANT_OPERATOR = "plant_operator"
-    FACILITY_ADMIN = "facility_admin"
-    COMPLIANCE_AUDITOR = "compliance_auditor"
-
-
-class DeviceType(str, enum.Enum):
-    PH_SENSOR = "ph_sensor"
-    TURBIDITY_SENSOR = "turbidity_sensor"
-    DOSING_PUMP = "dosing_pump"
-    FLOW_METER = "flow_meter"
-
-
-class MetricType(str, enum.Enum):
-    PH = "ph"
-    TURBIDITY_NTU = "turbidity_ntu"
-    CHLORINE_DOSE_ML = "chlorine_dose_ml"
-    FLOW_RATE = "flow_rate"
 
 
 class User(Base):
@@ -50,15 +27,22 @@ class User(Base):
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False), primary_key=True, default=_uuid
     )
+    full_name: Mapped[str] = mapped_column(String(120), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UserRole] = mapped_column(SAEnum(UserRole), nullable=False)
+
+    # Track the relationship to the roles table
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
+
     facility_id: Mapped[str | None] = mapped_column(
         UUID(as_uuid=False), ForeignKey("facilities.id"), nullable=True
     )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
+    role: Mapped["Role"] = relationship(back_populates="users")
     facility: Mapped["Facility | None"] = relationship(back_populates="users")
-

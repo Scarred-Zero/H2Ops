@@ -1,4 +1,3 @@
-# backend/workers/simulator.py
 import asyncio
 import json
 import logging

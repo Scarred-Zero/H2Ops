@@ -1,3 +1,5 @@
+import enum
+
 from sqlalchemy import (
     Enum as SAEnum,
     DateTime,
@@ -5,7 +7,13 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
-from src.models.user import User, UserRole
+from src.models.user import User
+
+
+class UserRole(str, enum.Enum):
+    PLANT_OPERATOR = "plant_operator"
+    FACILITY_ADMIN = "facility_admin"
+    COMPLIANCE_AUDITOR = "compliance_auditor"
 
 
 class Role(Base):

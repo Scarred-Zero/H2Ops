@@ -1,8 +1,10 @@
+from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
@@ -20,12 +22,13 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_async_engine(
+engine: AsyncEngine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
+    future=True,
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -37,13 +40,14 @@ AsyncSessionLocal = async_sessionmaker(
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """FastAPI dependency — yields a scoped async session per request."""
     async with AsyncSessionLocal() as session:
         try:
             yield session
         except Exception:
             await session.rollback()
             raise
+        finally:
+            await session.close()
 
 
 @asynccontextmanager
@@ -56,7 +60,8 @@ async def session_scope() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-
+        finally:
+            await session.close()
 
 HYPERTABLE_METRICS = [
     ("telemetry_logs", "timestamp"),

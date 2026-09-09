@@ -95,20 +95,20 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = os.getenv("COOKIE_SECURE", False)
 
     # EMAIL SETTINGS
-    # SMTP_HOST: str | None = os.getenv("SMTP_HOST", None)
-    # SMTP_PORT: int = int(os.getenv("SMTP_PORT", 587))
-    # SMTP_USER: str | None = os.getenv("SMTP_USER", None)
-    # SMTP_PASSWORD: str | None = os.getenv("SMTP_PASSWORD", None)
-    # SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", True)
-    # EMAILS_FROM_EMAIL: str | None = os.getenv("EMAILS_FROM_EMAIL", None)
+    SMTP_HOST: str | None = os.getenv("SMTP_HOST", None)
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", 587))
+    SMTP_USER: str | None = os.getenv("SMTP_USER", None)
+    SMTP_PASSWORD: str | None = os.getenv("SMTP_PASSWORD", None)
+    SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", True)
+    EMAILS_FROM_EMAIL: str | None = os.getenv("EMAILS_FROM_EMAIL", None)
 
     # VERIFICATION SETTINGS
-    # FRONTEND_VERIFY_URL: str = os.getenv(
-    #     "FRONTEND_VERIFY_URL", "http://localhost:3000/verify-email"
-    # )
-    # FRONTEND_RESET_PASSWORD: str = os.getenv(
-    #     "FRONTEND_RESET_PASSWORD", "http://localhost:3000/reset-password"
-    # )
+    FRONTEND_VERIFY_URL: str = os.getenv(
+        "FRONTEND_VERIFY_URL", "http://localhost:3000/verify-email"
+    )
+    FRONTEND_RESET_PASSWORD: str = os.getenv(
+        "FRONTEND_RESET_PASSWORD", "http://localhost:3000/reset-password"
+    )
 
     # CORS SETTINGS
     BACKEND_CORS_ORIGINS: list[str] | str = []

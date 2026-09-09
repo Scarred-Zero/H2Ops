@@ -1,4 +1,5 @@
 import _uuid
+import enum
 from datetime import datetime, timezone
 from typing import List
 
@@ -15,8 +16,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.alert import Alert
 from src.core.database import Base
-from src.models.user import DeviceType
 from src.models.facility import Facility
+
+
+class DeviceType(str, enum.Enum):
+    PH_SENSOR = "ph_sensor"
+    TURBIDITY_SENSOR = "turbidity_sensor"
+    DOSING_PUMP = "dosing_pump"
+    FLOW_METER = "flow_meter"
 
 
 class Device(Base):

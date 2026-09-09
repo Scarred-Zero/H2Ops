@@ -1,3 +1,4 @@
+import enum
 from datetime import datetime, timezone
 
 from sqlalchemy import (
@@ -11,7 +12,14 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
-from src.models.device import DeviceType, MetricType
+from src.models.device import DeviceType
+
+
+class MetricType(str, enum.Enum):
+    PH = "ph"
+    TURBIDITY_NTU = "turbidity_ntu"
+    CHLORINE_DOSE_ML = "chlorine_dose_ml"
+    FLOW_RATE = "flow_rate"
 
 
 class TelemetryLog(Base):

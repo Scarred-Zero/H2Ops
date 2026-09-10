@@ -44,7 +44,6 @@ class Device(Base):
     ) 
     alerts: Mapped[List["Alert"]] = relationship("Alert", back_populates="device", cascade="all, delete-orphan")
 
-
     # New JSONB column for dynamic thresholds
     thresholds: Mapped[dict] = mapped_column(JSONB, nullable=True, default=dict)
 

@@ -3,7 +3,7 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, patch
 
-from src.main import app  # ensure server/main.py exposes `app`
+from server.main import app
 
 
 @pytest.mark.asyncio

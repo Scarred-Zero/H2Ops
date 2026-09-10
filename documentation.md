@@ -45,13 +45,13 @@ H2Ops/
 │   ├── public/                                 # static assets
 │   └── types/                                  # shared client TypeScript types
 │
-├── server/                                    # FastAPI backend application
+├── server/                                     # FastAPI backend application
 │   ├── .dockerignore                           # Docker build exclusions
 │   ├── .python-version                         # project Python version
 │   ├── alembic.ini                             # Alembic configuration
 │   ├── Dockerfile                              # server container image
 │   ├── main.py                                 # FastAPI application entry point
-│   ├── pyproject.toml                           # Python project and dependency metadata
+│   ├── pyproject.toml                          # Python project and dependency metadata
 │   ├── README.md                               # server-specific documentation
 │   ├── uv.lock                                 # locked Python dependency versions
 │   ├── alembic/                                # database migration configuration
@@ -115,7 +115,6 @@ H2Ops/
 │       │   └── test_telemetry_repo.py
 │       ├── utils/                               # shared server utilities
 │       │   ├── __init__.py
-│       │   ├── jwt_handler.py
 │       │   ├── path_utils.py
 │       │   ├── rate_limiter.py
 │       │   └── redis_client.py
@@ -128,8 +127,10 @@ H2Ops/
 └── infra/                                     # shared infrastructure bootstrap
     ├── minio/
     │   └── init-bucket.sh                      # MinIO bucket initialization
+    ├── mosquitto/
+    │   └── mosquitto.conf                      # MinIO bucket initialization
     └── postgres/
-        └── init.sql/                           # PostgreSQL initialization scripts
+        └── init.sql                          # PostgreSQL initialization scripts
 ```
 
 > Generated or machine-local directories such as `client/.next/`, `client/node_modules/`, `server/.venv/`, and `server/__pycache__/` are present in some workspaces but are intentionally omitted from this source tree.

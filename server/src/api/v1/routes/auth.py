@@ -25,7 +25,7 @@ router = APIRouter()
 async def me(current_user: User = Depends(get_current_user)):
     return {
         "id": str(current_user.id),
-        "username": current_user.username,
+        "full_name": current_user.full_name,
         "roles": [r.name for r in getattr(current_user, "roles", [])],
     }
 

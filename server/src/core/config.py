@@ -80,8 +80,8 @@ class Settings(BaseSettings):
     MINIO_ENDPOINT: str = ""
     MINIO_PUBLIC_URL: str = os.getenv("MINIO_PUBLIC_URL", "")
     MINIO_ROOT_USER: str = os.getenv("MINIO_ROOT_USER", "minioadmin")
-    MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
     MINIO_ROOT_PASSWORD: str = os.getenv("MINIO_ROOT_PASSWORD", "minioadminpassword")
+    MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
     MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "minioadminpassword")
     MINIO_BUCKET: str = os.getenv("MINIO_BUCKET", "reports")
     MINIO_USE_SSL: bool = False
